@@ -3,7 +3,7 @@ import time
 
 
 def clear():
-    time.sleep(0.005)
+    time.sleep(0.05)
     os.system('clear')
 
 
@@ -20,15 +20,15 @@ lines = [
 tail_positions = [(0, 0)]
 
 
-def rope_map(head, tail, size):
+def rope_map(head, tails: list, size):
     rope = []
     line = []
     for y in range(-size, size):
         for x in range(-size, size):
             if head == (x, y):
                 line.append("H")
-            elif tail == (x, y):
-                line.append("T")
+            elif (x, y) in tails:
+                line.append(str(tails.index((x, y)) + 1))
             elif x == 0 and y == 0:
                 line.append("S")
             else:
@@ -39,51 +39,57 @@ def rope_map(head, tail, size):
     return rope
 
 
-def move_head_up(head, tail, moves) -> tuple:
+def move_head_up(head, tails: list, moves) -> tuple:
     (x, y) = head
 
     for i in range(moves):
         y += 1
         head = (x, y)
-        tail = move_tail(head, tail)
-        rope = rope_map(head, tail, size)
+        tails = move_tails(head, tails)
 
-    return head, tail
+    return head, tails
 
 
-def move_head_down(head, tail, moves) -> tuple:
+def move_head_down(head, tails: list, moves) -> tuple:
     (x, y) = head
 
     for i in range(moves):
         y -= 1
         head = (x, y)
-        tail = move_tail(head, tail)
-        rope = rope_map(head, tail, size)
+        tails = move_tails(head, tails)
 
-    return head, tail
+    return head, tails
 
 
-def move_head_right(head, tail, moves) -> tuple:
+def move_head_right(head, tails: list, moves) -> tuple:
     (x, y) = head
 
     for i in range(moves):
         x += 1
         head = (x, y)
-        tail = move_tail(head, tail)
-        rope = rope_map(head, tail, size)
+        tails = move_tails(head, tails)
 
-    return head, tail
+    return head, tails
 
 
-def move_head_left(head, tail, moves) -> tuple:
+def move_head_left(head, tails: list, moves) -> tuple:
     (x, y) = head
 
     for i in range(moves):
         x -= 1
         head = (x, y)
-        tail = move_tail(head, tail)
-        rope = rope_map(head, tail, size)
-    return head, tail
+        tails = move_tails(head, tails)
+
+    return head, tails
+
+
+def move_tails(h, tails: list) -> list:
+    new_tails = []
+    for tail in tails:
+        new_tails.append(move_tail(h, tail))
+        h = new_tails[-1]
+
+    return new_tails
 
 
 def move_tail(head, tail) -> tuple:
@@ -143,47 +149,26 @@ def move_tail(head, tail) -> tuple:
 
 if __name__ == "__main__":
 
+    lines = [
+        "R 4",
+        "U 3",
+        "U 1"
+    ]
+
     head = (0, 0)
-    tail = (0, 0)
-    size = 50
-
-    rope = rope_map(head, tail, size)
-
-    # print("\nR 4")
-    # head, tail = move_head_right(head, tail, 4)
-    # print("\nU 4")
-    # head, tail = move_head_up(head, tail, 4)
-    # print("\nL 3")
-    # head, tail = move_head_left(head, tail, 3)
-    # print("\nD 1")
-    # head, tail = move_head_down(head, tail, 1)
-    # print("\nR 4")
-    # head, tail = move_head_right(head, tail, 4)
-    # print("\nD 1")
-    # head, tail = move_head_down(head, tail, 1)
-    # print("\nL 5")
-    # head, tail = move_head_left(head, tail, 5)
-    # print("\nR 2")
-    # head, tail = move_head_right(head, tail, 2)
-
-    lines = [line.strip() for line in open('input.txt')]
+    tails = [(0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0)]
+    size = 20
 
     for line in lines:
         (move, steps) = line.split(" ")
-
         if move == "R":
-            head, tail = move_head_right(head, tail, int(steps))
+            head, tails = move_head_right(head, tails, int(steps))
         elif move == "L":
-            head, tail = move_head_left(head, tail, int(steps))
+            head, tails = move_head_left(head, tails, int(steps))
         elif move == "U":
-            head, tail = move_head_up(head, tail, int(steps))
+            head, tails = move_head_up(head, tails, int(steps))
         elif move == "D":
-            head, tail = move_head_down(head, tail, int(steps))
+            head, tails = move_head_down(head, tails, int(steps))
 
-        clear()
-        for map_line in rope_map(head, tail, size):
-            print("".join(map_line))
-
-    print(len(set(tail_positions))+1)
-
-
+    for map_line in rope_map(head, tails, size):
+        print("".join(map_line))
