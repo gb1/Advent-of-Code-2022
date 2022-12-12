@@ -1,23 +1,4 @@
-import os
-import time
-
-
-def clear():
-    time.sleep(0.05)
-    os.system('clear')
-
-
-lines = [
-    "R 4",
-    "U 4",
-    "L 3",
-    "D 1",
-    "R 4",
-    "D 1",
-    "L 5",
-    "R 2"]
-
-tail_positions = [(0, 0)]
+tail_positions = {(0, 0)}
 
 
 def rope_map(head, tails: list, size):
@@ -31,6 +12,8 @@ def rope_map(head, tails: list, size):
                 line.append(str(tails.index((x, y)) + 1))
             elif x == 0 and y == 0:
                 line.append("S")
+            elif (x, y) in tail_positions:
+                line.append("#")
             else:
                 line += ["."]
         rope.append(line)
@@ -39,94 +22,79 @@ def rope_map(head, tails: list, size):
     return rope
 
 
-def move_head_up(head, tails: list, moves) -> tuple:
-    (x, y) = head
+def move_head_up(h, t: list, moves) -> tuple:
+    (x, y) = h
 
     for i in range(moves):
         y += 1
-        head = (x, y)
-        tails = move_tails(head, tails)
+        h = (x, y)
+        t = move_tails(h, t)
 
-    return head, tails
+    return h, t
 
 
-def move_head_down(head, tails: list, moves) -> tuple:
-    (x, y) = head
+def move_head_down(h, t: list, moves) -> tuple:
+    (x, y) = h
 
     for i in range(moves):
         y -= 1
-        head = (x, y)
-        tails = move_tails(head, tails)
+        h = (x, y)
+        t = move_tails(h, t)
 
-    return head, tails
+    return h, t
 
 
-def move_head_right(head, tails: list, moves) -> tuple:
-    (x, y) = head
+def move_head_right(h, t: list, moves) -> tuple:
+    (x, y) = h
 
     for i in range(moves):
         x += 1
-        head = (x, y)
-        tails = move_tails(head, tails)
+        h = (x, y)
+        t = move_tails(h, t)
 
-    return head, tails
+    return h, t
 
 
-def move_head_left(head, tails: list, moves) -> tuple:
-    (x, y) = head
+def move_head_left(h, t: list, moves) -> tuple:
+    (x, y) = h
 
     for i in range(moves):
         x -= 1
-        head = (x, y)
-        tails = move_tails(head, tails)
+        h = (x, y)
+        t = move_tails(h, t)
 
-    return head, tails
+    return h, t
 
 
-def move_tails(h, tails: list) -> list:
+def move_tails(h, t: list) -> list:
     new_tails = []
-    for tail in tails:
+    for tail in t:
         new_tails.append(move_tail(h, tail))
         h = new_tails[-1]
+
+    tail_positions.add(new_tails[8])
 
     return new_tails
 
 
-def move_tail(head, tail) -> tuple:
+def move_tail(h, tail) -> tuple:
     (tailx, taily) = tail
-    (headx, heady) = head
-    tail_positions.append(tail)
-    # tail below head and to the left (going up)
-    if tailx < headx and taily < heady - 1:
-        return headx, heady - 1
+    (headx, heady) = h
 
-    # tail below head and to the right (going up)
-    if tailx > headx and taily < heady - 1:
-        return headx, heady - 1
+    # manhattan distance
+    manhattan = abs(tailx - headx) + abs(taily - heady)
 
-    # tail above head and to the left (going down)
-    if tailx < headx and taily > heady + 1:
-        return headx, heady + 1
+    if tailx != headx and taily != heady and manhattan > 2:
+        if tailx < headx:
+            tailx += 1
+        if tailx > headx:
+            tailx -= 1
+        if taily < heady:
+            taily += 1
+        if taily > heady:
+            taily -= 1
 
-    # tail above head and to the right (going down)
-    if tailx > headx and taily > heady + 1:
-        return headx, heady + 1
-
-    # tail below head and to the left (going right)
-    if tailx < headx - 1 and taily < heady:
-        return headx - 1, heady
-
-    # tail above head and to the left (going right)
-    if tailx < headx - 1 and taily > heady:
-        return headx - 1, heady
-
-    # tail below head and to the right (going left)
-    if tailx > headx + 1 and taily < heady:
-        return headx + 1, heady
-
-    # tail below head and to the left (going left)
-    if tailx > headx + 1 and taily > heady:
-        return headx + 1, heady
+        return tailx, taily
 
     # tail to the left of head
     if tailx < headx - 1:
@@ -148,16 +116,22 @@ def move_tail(head, tail) -> tuple:
 
 
 if __name__ == "__main__":
-
     lines = [
-        "R 4",
-        "U 3",
-        "U 1"
+        "R 5",
+        "U 8",
+        "L 8",
+        "D 3",
+        "R 17",
+        "D 10",
+        "L 25",
+        "U 20"
     ]
 
     head = (0, 0)
     tails = [(0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0)]
-    size = 20
+    size = 100
+
+    lines = [line.strip() for line in open('input.txt')]
 
     for line in lines:
         (move, steps) = line.split(" ")
@@ -172,3 +146,6 @@ if __name__ == "__main__":
 
     for map_line in rope_map(head, tails, size):
         print("".join(map_line))
+
+
+    print(len(tail_positions))
